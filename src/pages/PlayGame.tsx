@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, Maximize, Pause, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Maximize, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { getGameById } from '../data/games';
 import { useRecent } from '../hooks/useRecent';
 import MobileControls from '../components/MobileControls';
