@@ -55,7 +55,7 @@ const AdminDashboard = () => {
         alert("Error uploading ROM file. Did you create the 'roms' public bucket in Supabase?");
       } else if (uploadData) {
         const { data: { publicUrl } } = supabase.storage.from('roms').getPublicUrl(fileName);
-        newGame.gamePath = publicUrl;
+        newGame.gamepath = publicUrl;
       }
     }
 
@@ -293,9 +293,9 @@ const AdminDashboard = () => {
                     Selected: {selectedFile.name}
                   </p>
                 )}
-                {formData.gamePath && !selectedFile && (
+                {formData.gamepath && !selectedFile && (
                   <p className="text-sm text-gray-500 mt-1 font-vt323 truncate">
-                    Current: {formData.gamePath}
+                    Current: {formData.gamepath}
                   </p>
                 )}
               </div>

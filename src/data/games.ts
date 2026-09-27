@@ -12,7 +12,7 @@ export interface Game {
   controls: {
     [key: string]: string;
   };
-  gamePath?: string; // Path to ROM or HTML5 game entry point
+  gamepath?: string; // Path to ROM or HTML5 game entry point
 }
 
 // Using placeholder images from Unsplash or plain colors for demo purposes
