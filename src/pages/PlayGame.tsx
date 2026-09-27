@@ -4,6 +4,7 @@ import { ArrowLeft, Maximize, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-
 import { useGames } from '../hooks/useGames';
 import { useRecent } from '../hooks/useRecent';
 import MobileControls from '../components/MobileControls';
+import { Nostalgist } from 'nostalgist';
 
 const PlayGame = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -12,16 +13,55 @@ const PlayGame = () => {
   const { addRecentGame } = useRecent();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [error, setError] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const emulatorContainerRef = useRef<HTMLDivElement>(null);
+  const nostalgistRef = useRef<any>(null);
 
   useEffect(() => {
     if (game) {
       addRecentGame(game.id);
-      // Simulate loading time
-      const timer = setTimeout(() => setIsPlaying(true), 1500);
-      return () => clearTimeout(timer);
     }
   }, [game, addRecentGame]);
+
+  const launchEmulator = async () => {
+    if (!game?.gamepath) {
+      setError("No ROM file was found for this game.");
+      return;
+    }
+    
+    setIsPlaying(true);
+    setError('');
+
+    try {
+      let core = 'fceumm'; // default NES
+      const path = game.gamepath.toLowerCase();
+      if (path.includes('.sfc') || path.includes('.smc')) core = 'snes9x';
+      else if (path.includes('.md') || path.includes('.gen')) core = 'genesis_plus_gx';
+      else if (path.includes('.gba')) core = 'mgba';
+      else if (path.includes('.gb') || path.includes('.gbc')) core = 'gambatte';
+
+      nostalgistRef.current = await Nostalgist.launch({
+        core,
+        rom: game.gamepath,
+        element: emulatorContainerRef.current!,
+        resolveCoreJs: (core) => `https://unpkg.com/nostalgist/dist/nostalgist.js`,
+      });
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to launch emulator. " + err.message);
+      setIsPlaying(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup emulator on unmount
+      if (nostalgistRef.current) {
+        nostalgistRef.current.exit();
+      }
+    };
+  }, []);
 
   if (loading) {
     return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
@@ -63,30 +103,27 @@ const PlayGame = () => {
           {/* CRT Effects */}
           <div className="absolute inset-0 pointer-events-none crt z-20"></div>
           
-          {!isPlaying ? (
-            <div className="text-center z-10 animate-pulse">
-              <p className="font-press-start text-xl sm:text-2xl text-white mb-4">LOADING...</p>
-              <p className="font-vt323 text-2xl text-retro-cyan">PLEASE WAIT</p>
-            </div>
-          ) : (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#111] text-white">
-              {/* Placeholder for Emulator/Canvas */}
-              <div className="text-center p-4">
-                <p className="font-press-start text-lg sm:text-xl text-retro-yellow mb-6">
-                  DEMO SCREEN
-                </p>
+          <div ref={emulatorContainerRef} className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#111] text-white overflow-hidden">
+            {!isPlaying && (
+              <div className="text-center p-4 z-30">
                 <img 
                   src={game.thumbnail} 
                   alt="Gameplay Demo" 
-                  className="w-full max-w-sm mx-auto object-cover opacity-50 pixel-corners border-2 border-gray-700" 
+                  className="w-full max-w-sm mx-auto object-cover opacity-60 pixel-corners border-2 border-gray-700 mb-6" 
                 />
-                <p className="font-vt323 text-2xl mt-6 text-gray-400">
-                  Emulator integration placeholder.<br />
-                  Add your game ROM or HTML5 canvas here.
-                </p>
+                {error ? (
+                  <p className="font-vt323 text-2xl text-red-500 mb-6">{error}</p>
+                ) : (
+                  <button 
+                    onClick={launchEmulator}
+                    className="font-press-start text-xl text-black bg-retro-cyan hover:bg-white px-6 py-4 border-4 border-retro-cyan transition-colors"
+                  >
+                    INSERT COIN TO PLAY
+                  </button>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Cabinet Controls (Desktop) */}
@@ -98,33 +135,6 @@ const PlayGame = () => {
           >
             <Maximize className="w-6 h-6" />
           </button>
-          <button 
-            className="p-3 bg-gray-800 hover:bg-gray-700 text-white rounded shadow-[inset_0_-4px_0_rgba(0,0,0,0.5)] active:shadow-[inset_0_0_0_rgba(0,0,0,0)] active:translate-y-1 transition-all"
-            title="Pause/Play"
-          >
-            <Pause className="w-6 h-6" />
-          </button>
-          <button 
-            className="p-3 bg-gray-800 hover:bg-gray-700 text-white rounded shadow-[inset_0_-4px_0_rgba(0,0,0,0.5)] active:shadow-[inset_0_0_0_rgba(0,0,0,0)] active:translate-y-1 transition-all"
-            title="Restart"
-          >
-            <RotateCcw className="w-6 h-6" />
-          </button>
-          <button 
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-3 bg-gray-800 hover:bg-gray-700 text-white rounded shadow-[inset_0_-4px_0_rgba(0,0,0,0.5)] active:shadow-[inset_0_0_0_rgba(0,0,0,0)] active:translate-y-1 transition-all"
-            title="Toggle Sound"
-          >
-            {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-          </button>
-          <div className="ml-auto flex gap-4">
-            <Link 
-              to={`/games/${game.slug}`}
-              className="p-3 bg-red-900 hover:bg-red-800 text-white rounded shadow-[inset_0_-4px_0_rgba(0,0,0,0.5)] active:shadow-[inset_0_0_0_rgba(0,0,0,0)] active:translate-y-1 transition-all font-vt323 text-xl uppercase px-6"
-            >
-              Exit
-            </Link>
-          </div>
         </div>
 
         {/* Mobile On-Screen Controls */}
