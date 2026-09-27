@@ -1,20 +1,22 @@
-export const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'password123' // You can change this later
-};
+import { supabase } from './supabase';
 
-export const isAuthenticated = () => {
-  return window.localStorage.getItem('admin_auth') === 'true';
-};
-
-export const login = (username: string, password: string) => {
-  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-    window.localStorage.setItem('admin_auth', 'true');
-    return true;
+export const login = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) {
+    console.error("Login error:", error.message);
+    return false;
   }
-  return false;
+  return true;
 };
 
-export const logout = () => {
-  window.localStorage.removeItem('admin_auth');
+export const logout = async () => {
+  await supabase.auth.signOut();
+};
+
+export const checkAuth = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
 };

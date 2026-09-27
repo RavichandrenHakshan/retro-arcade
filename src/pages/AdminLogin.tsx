@@ -4,18 +4,22 @@ import { Shield, Lock } from 'lucide-react';
 import { login } from '../utils/auth';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(username, password)) {
+    setIsLoading(true);
+    const success = await login(email, password);
+    if (success) {
       navigate('/admin');
     } else {
       setError('ACCESS DENIED. INVALID CREDENTIALS.');
     }
+    setIsLoading(false);
   };
 
   return (
@@ -29,20 +33,22 @@ const AdminLogin = () => {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block font-vt323 text-xl text-gray-400 mb-2">USERNAME</label>
+            <label className="block font-vt323 text-xl text-gray-400 mb-2">ADMIN EMAIL</label>
             <input 
-              type="text" 
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email" 
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-black border-2 border-gray-600 focus:border-retro-cyan px-4 py-2 font-vt323 text-xl text-white outline-none"
-              placeholder="Enter username"
+              placeholder="Enter email"
             />
           </div>
 
           <div>
             <label className="block font-vt323 text-xl text-gray-400 mb-2">PASSWORD</label>
             <input 
-              type="password" 
+              type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-black border-2 border-gray-600 focus:border-retro-cyan px-4 py-2 font-vt323 text-xl text-white outline-none"
@@ -58,10 +64,11 @@ const AdminLogin = () => {
 
           <button 
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-retro-magenta hover:bg-retro-magenta/80 text-white font-press-start text-sm py-4 border-2 border-transparent hover:border-white transition-all shadow-[0_0_15px_rgba(255,0,255,0.5)]"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 bg-retro-magenta hover:bg-retro-magenta/80 text-white font-press-start text-sm py-4 border-2 border-transparent hover:border-white transition-all shadow-[0_0_15px_rgba(255,0,255,0.5)] disabled:opacity-50"
           >
             <Lock className="w-4 h-4" />
-            LOGIN TO SYSTEM
+            {isLoading ? 'AUTHENTICATING...' : 'LOGIN TO SYSTEM'}
           </button>
         </form>
       </div>
