@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
-import { games } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import GameCard from '../components/GameCard';
 
 const Favorites = () => {
+  const { games, loading } = useGames();
   const { favorites } = useFavorites();
   const favoriteGames = favorites.map(id => games.find(g => g.id === id)).filter(Boolean) as typeof games;
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
+  }
 
   return (
     <div className="space-y-8">

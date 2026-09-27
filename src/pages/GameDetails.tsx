@@ -1,13 +1,18 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Play, Heart, Calendar, Monitor, Gamepad, Code } from 'lucide-react';
-import { getGameById } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { useFavorites } from '../hooks/useFavorites';
 import { cn } from '../components/Navbar';
 
 const GameDetails = () => {
   const { gameId } = useParams<{ gameId: string }>();
+  const { getGameById, loading } = useGames();
   const game = gameId ? getGameById(gameId) : undefined;
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
+  }
 
   if (!game) {
     return <Navigate to="/games" replace />;

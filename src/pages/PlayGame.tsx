@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { ArrowLeft, Maximize, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
-import { getGameById } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import { useRecent } from '../hooks/useRecent';
 import MobileControls from '../components/MobileControls';
 
 const PlayGame = () => {
   const { gameId } = useParams<{ gameId: string }>();
+  const { getGameById, loading } = useGames();
   const game = gameId ? getGameById(gameId) : undefined;
   const { addRecentGame } = useRecent();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -21,6 +22,10 @@ const PlayGame = () => {
       return () => clearTimeout(timer);
     }
   }, [game, addRecentGame]);
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
+  }
 
   if (!game) {
     return <Navigate to="/games" replace />;

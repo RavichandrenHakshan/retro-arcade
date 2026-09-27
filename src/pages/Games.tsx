@@ -1,25 +1,28 @@
 import { useState, useMemo } from 'react';
 import { Search, Filter } from 'lucide-react';
-import { games, categories } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import GameCard from '../components/GameCard';
 
 const Games = () => {
+  const { games, categories, platforms, loading } = useGames();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  
-  const platforms = Array.from(new Set(games.map(g => g.platform))).sort();
   const [selectedPlatform, setSelectedPlatform] = useState<string>('All');
 
   const filteredGames = useMemo(() => {
     return games.filter(game => {
       const matchesSearch = game.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            game.description.toLowerCase().includes(searchTerm.toLowerCase());
+                            (game.description && game.description.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCategory = selectedCategory === 'All' || game.genre === selectedCategory;
       const matchesPlatform = selectedPlatform === 'All' || game.platform === selectedPlatform;
       
       return matchesSearch && matchesCategory && matchesPlatform;
     });
-  }, [searchTerm, selectedCategory, selectedPlatform]);
+  }, [games, searchTerm, selectedCategory, selectedPlatform]);
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
+  }
 
   return (
     <div className="space-y-8">

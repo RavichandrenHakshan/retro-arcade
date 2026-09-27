@@ -1,13 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Play } from 'lucide-react';
-import { games } from '../data/games';
+import { useGames } from '../hooks/useGames';
 import GameCard from '../components/GameCard';
 import { useRecent } from '../hooks/useRecent';
 
 const Home = () => {
+  const { games, loading } = useGames();
   const { recentGames } = useRecent();
+  
   const recentGameData = recentGames.map(id => games.find(g => g.id === id)).filter(Boolean) as typeof games;
   const featuredGames = games.slice(0, 6);
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING...</div>;
+  }
 
   return (
     <div className="space-y-16">

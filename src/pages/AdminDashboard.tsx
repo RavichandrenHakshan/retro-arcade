@@ -1,35 +1,39 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, LogOut, Plus, Trash2, Save } from 'lucide-react';
-import { games as initialGames, updateGamesDb, Game } from '../data/games';
+import { Game } from '../data/games';
 import { logout } from '../utils/auth';
+import { supabase } from '../utils/supabase';
+import { useGames } from '../hooks/useGames';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [games, setGames] = useState<Game[]>(initialGames);
+  const { games, loading, refetch } = useGames();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Game>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this game?')) {
-      const updated = games.filter(g => g.id !== id);
-      setGames(updated);
-      updateGamesDb(updated);
+      await supabase.from('games').delete().eq('id', id);
+      refetch();
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.id) {
       alert("ID and Title are required");
       return;
     }
     
+    setIsSaving(true);
     // Ensure minimum fields are present
     const newGame = {
       ...formData,
@@ -38,19 +42,35 @@ const AdminDashboard = () => {
       controls: formData.controls || { "Action": "Spacebar" }
     } as Game;
 
-    const existingIndex = games.findIndex(g => g.id === newGame.id);
-    let updatedGames = [...games];
-    
-    if (existingIndex >= 0) {
-      updatedGames[existingIndex] = newGame;
-    } else {
-      updatedGames.push(newGame);
+    // Handle File Upload to Supabase Storage
+    if (selectedFile) {
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${newGame.id}-${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('roms')
+        .upload(fileName, selectedFile);
+        
+      if (uploadError) {
+        console.error("Error uploading file:", uploadError);
+        alert("Error uploading ROM file. Did you create the 'roms' public bucket in Supabase?");
+      } else if (uploadData) {
+        const { data: { publicUrl } } = supabase.storage.from('roms').getPublicUrl(fileName);
+        newGame.gamePath = publicUrl;
+      }
     }
 
-    setGames(updatedGames);
-    updateGamesDb(updatedGames);
-    setIsEditing(false);
-    setFormData({});
+    const { error } = await supabase.from('games').upsert(newGame);
+    
+    if (error) {
+      console.error("Error saving game:", error);
+      alert("Failed to save game");
+    } else {
+      setIsEditing(false);
+      setFormData({});
+      setSelectedFile(null);
+      refetch();
+    }
+    setIsSaving(false);
   };
 
   const openEditor = (game?: Game) => {
@@ -65,8 +85,13 @@ const AdminDashboard = () => {
         controls: { "Move": "Arrows", "Action": "Spacebar" }
       });
     }
+    setSelectedFile(null);
     setIsEditing(true);
   };
+
+  if (loading) {
+    return <div className="min-h-[50vh] flex items-center justify-center font-press-start text-retro-cyan animate-pulse">LOADING DASHBOARD...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -254,9 +279,7 @@ const AdminDashboard = () => {
                   onChange={e => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      // For now we just store the name. 
-                      // In a real app, this file would be uploaded to an Object Storage bucket here.
-                      setFormData({...formData, gamePath: file.name});
+                      setSelectedFile(file);
                     }
                   }}
                   className="w-full bg-black border border-gray-600 focus:border-retro-cyan p-2 font-vt323 text-xl text-white outline-none 
@@ -265,9 +288,14 @@ const AdminDashboard = () => {
                 <p className="text-sm text-gray-400 mt-2 font-vt323">
                   Supported formats: .nes, .sfc, .smc, .md, .gb, .gba
                 </p>
-                {formData.gamePath && (
+                {selectedFile && (
                   <p className="text-sm text-retro-green mt-1 font-vt323">
-                    Selected: {formData.gamePath}
+                    Selected: {selectedFile.name}
+                  </p>
+                )}
+                {formData.gamePath && !selectedFile && (
+                  <p className="text-sm text-gray-500 mt-1 font-vt323 truncate">
+                    Current: {formData.gamePath}
                   </p>
                 )}
               </div>
