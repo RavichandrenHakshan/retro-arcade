@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, Maximize, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Maximize } from 'lucide-react';
 import { useGames } from '../hooks/useGames';
 import { useRecent } from '../hooks/useRecent';
 import MobileControls from '../components/MobileControls';
@@ -12,10 +12,9 @@ const PlayGame = () => {
   const game = gameId ? getGameById(gameId) : undefined;
   const { addRecentGame } = useRecent();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
-  const emulatorContainerRef = useRef<HTMLDivElement>(null);
+  const emulatorContainerRef = useRef<HTMLCanvasElement>(null);
   const nostalgistRef = useRef<any>(null);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ const PlayGame = () => {
         core,
         rom: game.gamepath,
         element: emulatorContainerRef.current!,
-        resolveCoreJs: (core) => `https://unpkg.com/nostalgist/dist/nostalgist.js`,
+        resolveCoreJs: () => `https://unpkg.com/nostalgist/dist/nostalgist.js`,
       });
     } catch (err: any) {
       console.error(err);
@@ -101,10 +100,16 @@ const PlayGame = () => {
         {/* Screen Bezel */}
         <div className="bg-black border-4 border-gray-900 rounded-lg p-2 sm:p-4 relative aspect-video w-full flex items-center justify-center overflow-hidden">
           {/* CRT Effects */}
-          <div className="absolute inset-0 pointer-events-none crt z-20"></div>
+          <div className="absolute inset-0 pointer-events-none crt z-30"></div>
           
-          <div ref={emulatorContainerRef} className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#111] text-white overflow-hidden">
-            {!isPlaying && (
+          {/* Permanent Canvas for Emulator */}
+          <canvas 
+            ref={emulatorContainerRef} 
+            className={`absolute inset-0 z-10 w-full h-full object-contain bg-black ${!isPlaying ? 'invisible' : ''}`} 
+          />
+
+          {!isPlaying && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#111] text-white overflow-hidden">
               <div className="text-center p-4 z-30">
                 <img 
                   src={game.thumbnail} 
@@ -122,8 +127,8 @@ const PlayGame = () => {
                   </button>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Cabinet Controls (Desktop) */}
