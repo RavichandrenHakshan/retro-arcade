@@ -303,10 +303,11 @@ const AdminDashboard = () => {
               <div className="pt-6">
                 <button 
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-retro-green hover:bg-retro-green/80 text-black font-press-start text-sm py-4 border-2 border-transparent transition-all shadow-[0_0_15px_rgba(57,255,20,0.4)]"
+                  disabled={isSaving}
+                  className="w-full flex items-center justify-center gap-2 bg-retro-green hover:bg-retro-green/80 text-black font-press-start text-sm py-4 border-2 border-transparent transition-all shadow-[0_0_15px_rgba(57,255,20,0.4)] disabled:opacity-50"
                 >
                   <Save className="w-5 h-5" />
-                  SAVE GAME
+                  {isSaving ? 'SAVING...' : 'SAVE GAME'}
                 </button>
               </div>
             </div>
