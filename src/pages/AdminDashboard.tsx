@@ -271,6 +271,20 @@ const AdminDashboard = () => {
                 />
               </div>
 
+              <div>
+                <label className="block font-vt323 text-xl text-retro-yellow">ROM URL (Internet Archive, etc.)</label>
+                <input 
+                  type="text" 
+                  value={formData.gamepath || ''}
+                  onChange={e => setFormData({...formData, gamepath: e.target.value})}
+                  className="w-full bg-black border border-retro-yellow focus:border-white p-2 font-vt323 text-xl text-white outline-none"
+                  placeholder="https://archive.org/download/.../game.nes"
+                />
+                <p className="text-sm text-gray-400 mt-1 font-vt323">
+                  Paste a direct ROM link instead of uploading a file.
+                </p>
+              </div>
+
               <div className="bg-gray-900/50 p-4 border border-gray-700">
                 <label className="block font-vt323 text-xl text-retro-cyan mb-2">Upload ROM File</label>
                 <input 
