@@ -6,9 +6,6 @@ import GameDetails from './pages/GameDetails';
 import PlayGame from './pages/PlayGame';
 import Favorites from './pages/Favorites';
 import About from './pages/About';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -21,10 +18,6 @@ function App() {
           <Route path="play/:gameId" element={<PlayGame />} />
           <Route path="favorites" element={<Favorites />} />
           <Route path="about" element={<About />} />
-          <Route path="admin/login" element={<AdminLogin />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="admin" element={<AdminDashboard />} />
-          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

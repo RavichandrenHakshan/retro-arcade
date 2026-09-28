@@ -10,9 +10,6 @@ const Footer = () => {
         <p className="font-vt323 text-lg text-gray-600 mb-4">
           INSERT COIN TO CONTINUE...
         </p>
-        <Link to="/admin" className="font-vt323 text-sm text-gray-700 hover:text-retro-magenta transition-colors">
-          [ ADMIN ACCESS ]
-        </Link>
       </div>
     </footer>
   );
