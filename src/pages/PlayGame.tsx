@@ -40,9 +40,15 @@ const PlayGame = () => {
       else if (path.includes('.gba')) core = 'mgba';
       else if (path.includes('.gb') || path.includes('.gbc')) core = 'gambatte';
 
+      // Bypass strict browser CORS security when fetching from Internet Archive
+      let finalRomUrl = game.gamepath;
+      if (finalRomUrl.includes('archive.org')) {
+        finalRomUrl = `https://corsproxy.io/?url=${encodeURIComponent(finalRomUrl)}`;
+      }
+
       nostalgistRef.current = await Nostalgist.launch({
         core,
-        rom: game.gamepath,
+        rom: finalRomUrl,
         element: emulatorContainerRef.current!,
       });
     } catch (err: any) {
