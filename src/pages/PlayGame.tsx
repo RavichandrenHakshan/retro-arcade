@@ -44,7 +44,6 @@ const PlayGame = () => {
         core,
         rom: game.gamepath,
         element: emulatorContainerRef.current!,
-        resolveCoreJs: () => `https://unpkg.com/nostalgist/dist/nostalgist.js`,
       });
     } catch (err: any) {
       console.error(err);
